@@ -1,0 +1,3 @@
+[submodule "MagicSetEditor2"]
+	path = MagicSetEditor2
+	url = git@github.com:twanvl/MagicSetEditor2.git
