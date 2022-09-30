@@ -1,0 +1,42 @@
+#! /bin/bash
+
+WORKDIR=`pwd`
+
+if [ "$1" == "clean" ]
+then
+    rm -rf AppDir
+    rm -rf MagicSetEditor2/build
+fi
+
+# Setup
+
+## Download AppImageTool continuous build
+AppImageTool="bin/appimagetool-x86_64.AppImage"
+[ -f "$AppImageTool" ] || wget -qO "$AppImageTool" https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage && chmod +x $AppImageTool
+
+## Make AppDir directory
+mkdir -p AppDir
+cd AppDir
+
+## Download AppRun from AppImageKit repository
+[ -f "AppRun" ] || wget -qO AppRun https://raw.githubusercontent.com/AppImage/AppImageKit/master/resources/AppRun && chmod +x AppRun
+
+## Make magicseteditor.desktop file
+cat <<EOF > magicseteditor.desktop
+[Desktop Entry]
+Name=Magic Set Editor
+Exec=magicseteditor
+Icon=magicseteditor
+Type=Application
+Categories=Development;
+EOF
+
+## Return
+cd $WORKDIR
+
+# Build
+./bin/build-mse.sh
+
+# Create AppImage
+TAG=`echo $(cd MagicSetEditor2 && git describe --tags --abbrev=0) | sed 's/^v//g'`
+VERSION=$TAG ARCH=x86_64 ./$AppImageTool AppDir magicseteditor-x86_64.AppImage
