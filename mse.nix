@@ -13,35 +13,39 @@ pkgs.stdenv.mkDerivation rec {
     sha256 = "sha256-c1FkurEWo3xswDxyI7wM6QcqA4AiIB9Wqe2PqFm+3jc=";
   };
 
-  buildInputs = [
+  nativeBuildInputs = [
     pkgs.binutils
-    pkgs.gpp
     pkgs.cmake
+    pkgs.gpp
+    pkgs.imagemagick
+  ];
+
+  buildInputs = [
+    pkgs.pkg-config
     pkgs.boost
     pkgs.hunspell
     pkgs.wxGTK30-gtk3
-    pkgs.imagemagick
   ];
 
   configurePhase = ''
     mkdir -p build
     cd build
-    cmake .. -DCMAKE_BUILD_TYPE=Release -DHUNSPELL_LIBRARIES=`find /nix/store -name "*libhunspell*so"`
+    cmake .. -DCMAKE_BUILD_TYPE=Release
     cd ..
   '';
 
   buildPhase = ''
     cd build
-    cmake --build .
+    make -j$(nproc)
     cd ..
   '';
 
   installPhase = ''
-    mkdir -p $out/usr/bin $out/usr/lib
+    mkdir -p $out/usr/{bin,lib}
 
     cp build/magicseteditor $out/usr/bin/
 
-    ldd build/magicseteditor | grep -E 'boost|hunspell|wxwidget' | awk "NF == 4 { system( \"cp \" \$3 \" $out/usr/lib/\" ) }"
+    ldd build/magicseteditor | awk "NF == 4 { system( \"cp \" \$3 \" $out/usr/lib/\" ) }"
 
     convert resource/icon/app.ico $out/magicseteditor.png
     cp $out/magicseteditor-3.png $out/magicseteditor.png
